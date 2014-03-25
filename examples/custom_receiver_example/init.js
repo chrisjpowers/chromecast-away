@@ -4,7 +4,8 @@
 
   castAway = window.castAway = new CastAway({
     applicationID: "8D5CA342",
-    namespace: "urn:x-cast:json"
+    namespace: "urn:x-cast:json",
+    localReceiver: true
   });
 
   castAway.on("receivers:available", function() {

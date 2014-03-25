@@ -1,9 +1,24 @@
 watch = require('watch')
 exec = require('child_process').exec
 
+express = require "express"
+app = express()
+server = require('http').createServer(app)
+io = require('socket.io').listen(server)
+
+app.use express.static("examples")
+
+server.listen 8989
+console.log "Listening on localhost:8989"
+
+io.sockets.on 'connection', (socket) ->
+  socket.on "localMessage", (data) ->
+    socket.broadcast.emit "localMessage", data
+
 exec('./node_modules/.bin/coffee -w -o lib/ -c src/')
 exec('./node_modules/.bin/coffee -w -o examples/default_media_receiver_example/ -c examples/default_media_receiver_example/')
 exec('./node_modules/.bin/coffee -w -o examples/custom_receiver_example/ -c examples/custom_receiver_example/')
+
 exec('./node_modules/.bin/http-server examples -p 8989')
 console.log "Running examples at localhost:8989"
 

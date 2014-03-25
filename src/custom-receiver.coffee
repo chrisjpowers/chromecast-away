@@ -11,10 +11,14 @@ module.exports = class CustomReceiver extends EventEmitter
     @config.maxInactivity = config.maxInactivity || DEFAULT_MAX_INACTIVITY
 
   start: ->
-    manager = cast.receiver.CastReceiverManager.getInstance()
-    bus = manager.getCastMessageBus(@namespace)
-    bus.onMessage = @onMessage
-    manager.start @config
+    if @castAway.localReceiver
+      socket = io.connect window.location.origin
+      socket.on 'localMessage', @onMessage
+    else
+      manager = cast.receiver.CastReceiverManager.getInstance()
+      bus = manager.getCastMessageBus(@namespace)
+      bus.onMessage = @onMessage
+      manager.start @config
 
   onMessage: (event) =>
     data = JSON.parse event.data

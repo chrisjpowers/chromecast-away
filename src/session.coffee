@@ -11,7 +11,11 @@ class Session extends EventEmitter
     onSuccess = (data) -> cb(null, data)
     onError = (err) -> cb err
     data = JSON.stringify(_name: name, _payload: payload)
-    @session.sendMessage @namespace, data, onSuccess, onError
+    if @castAway.localReceiver
+      socket = io.connect window.location.origin
+      socket.emit "localMessage", data: data
+    else
+      @session.sendMessage @namespace, data, onSuccess, onError
 
   load: (mediaInfo, cb=->) ->
     request = new chrome.cast.media.LoadRequest(mediaInfo)

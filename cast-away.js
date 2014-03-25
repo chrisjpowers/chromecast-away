@@ -19,7 +19,7 @@
 
     function CastAway(_arg) {
       var _ref;
-      _ref = _arg != null ? _arg : {}, this.applicationID = _ref.applicationID, this.namespace = _ref.namespace;
+      _ref = _arg != null ? _arg : {}, this.applicationID = _ref.applicationID, this.namespace = _ref.namespace, this.localReceiver = _ref.localReceiver;
       if (!((typeof chrome !== "undefined" && chrome !== null ? chrome.cast : void 0) || cast)) {
         throw "chrome.cast namespace not found";
       }
@@ -27,6 +27,9 @@
     }
 
     CastAway.prototype.initialize = function(cb) {
+      if (this.localReceiver) {
+        return this.emit("receivers:available");
+      }
       return window['__onGCastApiAvailable'] = (function(_this) {
         return function(loaded, errorInfo) {
           var apiConfig, app, error, sessionRequest, success;
@@ -86,6 +89,9 @@
 
     CastAway.prototype.requestSession = function(cb) {
       var onError, onSuccess;
+      if (this.localReceiver) {
+        return cb(null, new Session({}, this));
+      }
       onSuccess = (function(_this) {
         return function(session) {
           return cb(null, new Session(session, _this));
@@ -132,11 +138,16 @@
     }
 
     CustomReceiver.prototype.start = function() {
-      var bus, manager;
-      manager = cast.receiver.CastReceiverManager.getInstance();
-      bus = manager.getCastMessageBus(this.namespace);
-      bus.onMessage = this.onMessage;
-      return manager.start(this.config);
+      var bus, manager, socket;
+      if (this.castAway.localReceiver) {
+        socket = io.connect(window.location.origin);
+        return socket.on('localMessage', this.onMessage);
+      } else {
+        manager = cast.receiver.CastReceiverManager.getInstance();
+        bus = manager.getCastMessageBus(this.namespace);
+        bus.onMessage = this.onMessage;
+        return manager.start(this.config);
+      }
     };
 
     CustomReceiver.prototype.onMessage = function(event) {
@@ -725,7 +736,7 @@
     }
 
     Session.prototype.send = function(name, payload, cb) {
-      var data, onError, onSuccess;
+      var data, onError, onSuccess, socket;
       if (payload == null) {
         payload = {};
       }
@@ -742,7 +753,14 @@
         _name: name,
         _payload: payload
       });
-      return this.session.sendMessage(this.namespace, data, onSuccess, onError);
+      if (this.castAway.localReceiver) {
+        socket = io.connect(window.location.origin);
+        return socket.emit("localMessage", {
+          data: data
+        });
+      } else {
+        return this.session.sendMessage(this.namespace, data, onSuccess, onError);
+      }
     };
 
     Session.prototype.load = function(mediaInfo, cb) {
