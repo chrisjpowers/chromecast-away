@@ -18,6 +18,7 @@ io.sockets.on 'connection', (socket) ->
 exec('./node_modules/.bin/coffee -w -o lib/ -c src/')
 exec('./node_modules/.bin/coffee -w -o examples/default_media_receiver_example/ -c examples/default_media_receiver_example/')
 exec('./node_modules/.bin/coffee -w -o examples/custom_receiver_example/ -c examples/custom_receiver_example/')
+exec('./node_modules/.bin/coffee -w -o examples/web-page-viewer/ -c examples/web-page-viewer/')
 
 exec('./node_modules/.bin/http-server examples -p 8989')
 console.log "Running examples at localhost:8989"
